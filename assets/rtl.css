@@ -1,0 +1,43 @@
+/* RTL support for Arabic and other RTL languages */
+
+/* Header RTL styles */
+.header.rtl {
+  direction: rtl;
+}
+
+.header.rtl .header__columns {
+  direction: rtl;
+}
+
+.header.rtl .header__column {
+  direction: rtl;
+}
+
+/* Swap left/right column alignment */
+.header.rtl .header__column--left {
+  justify-content: flex-end;
+}
+
+.header.rtl .header__column--right {
+  justify-content: flex-start;
+}
+
+/* Menu and navigation */
+.header.rtl .menu-list,
+.header.rtl .menu-list__link {
+  text-align: right;
+}
+
+/* Mobile drawer opens from right */
+.header.rtl .header-drawer {
+  left: auto;
+  right: 0;
+}
+
+/* Mobile grid layout - reverse columns */
+@media screen and (max-width: 749px) {
+  .header.rtl .header__columns {
+    grid-template-areas: 'rightB rightA center leftB leftA';
+  }
+}
+

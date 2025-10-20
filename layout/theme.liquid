@@ -1,7 +1,19 @@
 <!doctype html>
+{%- liquid
+  # Define RTL languages
+  assign rtl_languages = 'ar,he,fa,ur' | split: ','
+  assign is_rtl = false
+  for rtl_lang in rtl_languages
+    if request.locale.iso_code == rtl_lang
+      assign is_rtl = true
+      break
+    endif
+  endfor
+-%}
 <html
   class="no-js{% if request.design_mode %} shopify-design-mode{% endif %}"
   lang="{{ request.locale.iso_code }}"
+  dir="{% if is_rtl %}rtl{% else %}ltr{% endif %}"
 >
   <head>
     {%- if settings.favicon != blank -%}

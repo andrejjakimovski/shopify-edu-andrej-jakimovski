@@ -171,6 +171,12 @@
   if collapse_header_paddings_class
     assign class = class | append: ' ' | append: collapse_header_paddings_class
   endif
+
+  # Add RTL class for Arabic and other RTL languages
+  assign rtl_languages = 'ar,he,fa,ur' | split: ','
+  if rtl_languages contains request.locale.iso_code
+    assign class = class | append: ' rtl'
+  endif
 %}
 
 <script type="application/ld+json">

@@ -1,2 +1,17 @@
 {{ 'overflow-list.css' | asset_url | preload_tag: as: 'style' }}
 {{ 'base.css' | asset_url | stylesheet_tag: preload: true }}
+
+{%- liquid
+  # Load RTL styles for RTL languages
+  assign rtl_languages = 'ar,he,fa,ur' | split: ','
+  assign is_rtl = false
+  for rtl_lang in rtl_languages
+    if request.locale.iso_code == rtl_lang
+      assign is_rtl = true
+      break
+    endif
+  endfor
+-%}
+{%- if is_rtl -%}
+  {{ 'rtl.css' | asset_url | stylesheet_tag }}
+{%- endif -%}
