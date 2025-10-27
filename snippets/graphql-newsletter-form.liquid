@@ -1,0 +1,262 @@
+{%- doc -%}
+  GraphQL Newsletter Form
+  Demonstrates Shopify Storefront API usage with GraphQL.
+  
+  This form submits data using the Storefront API's customerCreate mutation,
+  showing loading states, success/failure messages, and GraphQL network requests.
+  
+  @param {object} settings - Block settings for styling and configuration
+{%- enddoc -%}
+
+<script src="{{ 'graphql-newsletter.js' | asset_url }}" type="module"></script>
+
+<graphql-newsletter-component
+  class="graphql-newsletter spacing-style{% if settings.inherit_color_scheme == false %} color-{{ settings.color_scheme }}{% endif %}"
+  data-storefront-token="{{ settings.storefront_api_token }}"
+  data-shop-domain="{{ shop.permanent_domain }}"
+  style="
+    {% render 'spacing-style', settings: settings %}
+  "
+  {{ block.shopify_attributes }}
+>
+  <div class="graphql-newsletter__container">
+    <div class="graphql-newsletter__header">
+      <h3 class="graphql-newsletter__title">
+        {{ settings.heading | default: "Subscribe to Our Newsletter" }}
+      </h3>
+      <p class="graphql-newsletter__description">
+        {{ settings.description | default: "Create an account to get updates on new products. This form uses GraphQL with Shopify Storefront API." }}
+      </p>
+    </div>
+
+    <form
+      ref="form"
+      class="graphql-newsletter__form"
+      on:submit="/handleSubmit"
+      novalidate
+    >
+      <div class="graphql-newsletter__input-group">
+        <label for="newsletter-email-{{ block.id }}" class="visually-hidden">
+          Email address
+        </label>
+        <input
+          ref="emailInput"
+          type="email"
+          id="newsletter-email-{{ block.id }}"
+          name="email"
+          class="graphql-newsletter__input"
+          placeholder="Enter your email"
+          required
+          autocomplete="email"
+        >
+        <label for="newsletter-password-{{ block.id }}" class="visually-hidden">
+          Password
+        </label>
+        <input
+          ref="passwordInput"
+          type="password"
+          id="newsletter-password-{{ block.id }}"
+          name="password"
+          class="graphql-newsletter__input"
+          placeholder="Create a password"
+          required
+          autocomplete="new-password"
+          minlength="8"
+        >
+        <button
+          ref="submitButton"
+          type="submit"
+          class="graphql-newsletter__button button"
+          data-original-text="Subscribe"
+        >
+          Subscribe
+        </button>
+      </div>
+
+      <div
+        ref="messageContainer"
+        class="graphql-newsletter__message"
+        style="display: none;"
+        role="alert"
+        aria-live="polite"
+      ></div>
+    </form>
+
+    <div class="graphql-newsletter__info">
+      <p class="graphql-newsletter__info-text">
+        💡 <strong>Developer Note:</strong> Open browser DevTools → Network tab to see the GraphQL request!
+      </p>
+    </div>
+  </div>
+</graphql-newsletter-component>
+
+{% stylesheet %}
+  .graphql-newsletter {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .graphql-newsletter__container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-lg);
+  }
+
+  .graphql-newsletter__header {
+    text-align: center;
+  }
+
+  .graphql-newsletter__title {
+    font-size: var(--font-h3--size);
+    font-weight: var(--font-h3--weight);
+    margin-bottom: var(--margin-sm);
+    color: var(--color-foreground);
+  }
+
+  .graphql-newsletter__description {
+    font-size: var(--font-paragraph--size);
+    color: var(--color-foreground-secondary);
+    margin: 0;
+  }
+
+  .graphql-newsletter__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-md);
+  }
+
+  .graphql-newsletter__input-group {
+    display: flex;
+    gap: var(--gap-sm);
+    flex-direction: column;
+  }
+
+  .graphql-newsletter__input {
+    flex: 1;
+    padding: var(--padding-lg) var(--padding-xl);
+    border-radius: var(--style-border-radius-inputs);
+    border: var(--style-border-width-inputs) solid var(--color-input-border);
+    background-color: var(--color-input-background);
+    color: var(--color-input-text);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .graphql-newsletter__input:focus {
+    outline: none;
+    border-color: var(--color-button);
+  }
+
+  .graphql-newsletter__input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background-color: var(--color-background-disabled);
+  }
+
+  .graphql-newsletter__button {
+    padding: var(--padding-lg) var(--padding-xl);
+    white-space: nowrap;
+    min-width: 140px;
+    transition: opacity 0.2s ease;
+  }
+
+  .graphql-newsletter__button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .graphql-newsletter__button.loading {
+    position: relative;
+  }
+
+  .graphql-newsletter__button.loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    right: 12px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spinner 0.6s linear infinite;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+
+  .graphql-newsletter__message {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    padding: var(--padding-md) var(--padding-lg);
+    border-radius: var(--style-border-radius);
+    font-size: 0.875rem;
+  }
+
+  .graphql-newsletter__message::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .graphql-newsletter__message--success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+
+  .graphql-newsletter__message--success::before {
+    content: '✓';
+    background-color: #28a745;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  .graphql-newsletter__message--error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+
+  .graphql-newsletter__message--error::before {
+    content: '✕';
+    background-color: #dc3545;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  .graphql-newsletter__info {
+    background-color: #e7f3ff;
+    border: 1px solid #b3d9ff;
+    border-radius: var(--style-border-radius);
+    padding: var(--padding-md);
+    margin-top: var(--margin-sm);
+  }
+
+  .graphql-newsletter__info-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #004085;
+  }
+
+  /* Loading state for the entire form */
+  .graphql-newsletter__form.is-loading {
+    opacity: 0.8;
+    pointer-events: none;
+  }
+{% endstylesheet %}
+
