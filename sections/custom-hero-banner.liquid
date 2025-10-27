@@ -1,0 +1,586 @@
+{% liquid
+  # Media settings
+  assign has_image = false
+  assign has_video = false
+  assign has_external_video = false
+  
+  if section.settings.media_type == 'image' and section.settings.hero_image != blank
+    assign has_image = true
+  elsif section.settings.media_type == 'video' and section.settings.video_url != blank
+    assign has_external_video = true
+  endif
+  
+  # Content box settings
+  assign show_content_box = section.settings.show_content_box
+  assign content_box_color = section.settings.content_box_color
+  assign content_box_opacity = section.settings.content_box_opacity | divided_by: 100.0
+  assign content_alignment = section.settings.content_alignment
+  
+  # Text settings
+  assign text_color = section.settings.text_color
+  assign text_drop_shadow = section.settings.text_drop_shadow
+  
+  # Button layout
+  assign button_layout = section.settings.button_layout
+  
+  # Check if we have any blocks
+  assign has_content = false
+  if section.blocks.size > 0
+    assign has_content = true
+  endif
+%}
+
+<section 
+  class="custom-hero-banner"
+  style="
+    --hero-height: {{ section.settings.section_height }}vh;
+    --content-box-bg: {{ content_box_color }};
+    --content-box-opacity: {{ content_box_opacity }};
+    --text-color: {{ text_color }};
+    --content-alignment: {{ content_alignment }};
+    {% if text_drop_shadow %}
+      --text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    {% else %}
+      --text-shadow: none;
+    {% endif %}
+  "
+>
+  {%- comment -%} Background Media {%- endcomment -%}
+  <div class="custom-hero-banner__media">
+    {%- if has_image -%}
+      {{
+        section.settings.hero_image
+        | image_url: width: 3840
+        | image_tag:
+          class: 'custom-hero-banner__image',
+          loading: 'eager',
+          fetchpriority: 'high',
+          width: section.settings.hero_image.width,
+          height: section.settings.hero_image.height,
+          alt: section.settings.hero_image.alt | escape
+      }}
+    {%- elsif has_external_video -%}
+      <div class="custom-hero-banner__video">
+        {%- if section.settings.video_url contains 'youtube.com' or section.settings.video_url contains 'youtu.be' -%}
+          {%- assign video_id = section.settings.video_url | split: 'v=' | last | split: '/' | last | split: '&' | first -%}
+          <iframe
+            src="https://www.youtube.com/embed/{{ video_id }}?autoplay=1&mute=1&loop=1&playlist={{ video_id }}&controls=0&showinfo=0&rel=0&modestbranding=1"
+            frameborder="0"
+            allow="autoplay; encrypted-media"
+            allowfullscreen
+          ></iframe>
+        {%- elsif section.settings.video_url contains 'vimeo.com' -%}
+          {%- assign video_id = section.settings.video_url | split: 'vimeo.com/' | last | split: '/' | first -%}
+          <iframe
+            src="https://player.vimeo.com/video/{{ video_id }}?autoplay=1&muted=1&loop=1&background=1&controls=0"
+            frameborder="0"
+            allow="autoplay; fullscreen"
+            allowfullscreen
+          ></iframe>
+        {%- endif -%}
+      </div>
+    {%- else -%}
+      {%- comment -%} Placeholder if no media {%- endcomment -%}
+      {{ 'hero-apparel-1' | placeholder_svg_tag: 'custom-hero-banner__placeholder' }}
+    {%- endif -%}
+    
+    {%- comment -%} Dark Overlay {%- endcomment -%}
+    {%- if section.settings.show_overlay -%}
+      <div 
+        class="custom-hero-banner__overlay"
+        style="opacity: {{ section.settings.overlay_opacity | divided_by: 100.0 }};"
+      ></div>
+    {%- endif -%}
+  </div>
+
+  {%- comment -%} Content Area {%- endcomment -%}
+  {%- if has_content -%}
+    <div class="custom-hero-banner__content-wrapper">
+      <div class="custom-hero-banner__content{% if show_content_box %} custom-hero-banner__content--boxed{% endif %}">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            
+            {%- when 'hero_heading' -%}
+              <h2 
+                class="custom-hero-banner__heading"
+                {{ block.shopify_attributes }}
+                style="
+                  color: var(--text-color);
+                  text-shadow: var(--text-shadow);
+                "
+              >
+                {{ block.settings.heading }}
+              </h2>
+            
+            {%- when 'hero_text' -%}
+              <div 
+                class="custom-hero-banner__text"
+                {{ block.shopify_attributes }}
+                style="
+                  color: var(--text-color);
+                  text-shadow: var(--text-shadow);
+                "
+              >
+                {{ block.settings.text }}
+              </div>
+            
+          {%- endcase -%}
+        {%- endfor -%}
+        
+        {%- comment -%} Buttons Container {%- endcomment -%}
+        {%- assign button_blocks = section.blocks | where: 'type', 'cta_button' -%}
+        {%- if button_blocks.size > 0 -%}
+          <div class="custom-hero-banner__buttons custom-hero-banner__buttons--{{ button_layout }}">
+            {%- for block in button_blocks -%}
+              {%- if block.settings.button_label != blank -%}
+                {%- if block.settings.button_link != blank -%}
+                  <a 
+                    href="{{ block.settings.button_link }}"
+                    class="custom-hero-banner__button"
+                    {{ block.shopify_attributes }}
+                    style="
+                      color: {{ block.settings.button_text_color }};
+                      border-color: {{ block.settings.button_border_color }};
+                    "
+                  >
+                    {{ block.settings.button_label }}
+                  </a>
+                {%- else -%}
+                  <button 
+                    class="custom-hero-banner__button"
+                    {{ block.shopify_attributes }}
+                    style="
+                      color: {{ block.settings.button_text_color }};
+                      border-color: {{ block.settings.button_border_color }};
+                    "
+                  >
+                    {{ block.settings.button_label }}
+                  </button>
+                {%- endif -%}
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+  .custom-hero-banner {
+    position: relative;
+    width: 100%;
+    min-height: var(--hero-height, 500px);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: var(--content-alignment, center);
+  }
+
+  .custom-hero-banner__media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  .custom-hero-banner__image,
+  .custom-hero-banner__placeholder {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .custom-hero-banner__video {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .custom-hero-banner__video iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100vw;
+    height: 100vh;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  @media (min-aspect-ratio: 16/9) {
+    .custom-hero-banner__video iframe {
+      height: 56.25vw;
+    }
+  }
+
+  @media (max-aspect-ratio: 16/9) {
+    .custom-hero-banner__video iframe {
+      width: 177.78vh;
+    }
+  }
+
+  .custom-hero-banner__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 1;
+  }
+
+  .custom-hero-banner__content-wrapper {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1200px;
+    padding: 0 20px;
+    display: flex;
+    justify-content: var(--content-alignment, center);
+  }
+
+  .custom-hero-banner__content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+    text-align: center;
+    max-width: 600px;
+  }
+
+  .custom-hero-banner__content--boxed {
+    background-color: var(--content-box-bg);
+    opacity: var(--content-box-opacity);
+    padding: 40px 50px;
+    border-radius: 4px;
+  }
+
+  .custom-hero-banner__heading {
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .custom-hero-banner__text {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .custom-hero-banner__buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .custom-hero-banner__buttons--horizontal {
+    flex-direction: row;
+  }
+
+  .custom-hero-banner__buttons--vertical {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .custom-hero-banner__button {
+    display: inline-block;
+    padding: 14px 40px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border: 2px solid;
+    background: transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .custom-hero-banner__button:hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
+  }
+
+  /* Mobile responsiveness */
+  @media screen and (max-width: 749px) {
+    .custom-hero-banner {
+      min-height: 400px;
+    }
+
+    .custom-hero-banner__content--boxed {
+      padding: 30px 25px;
+    }
+
+    .custom-hero-banner__heading {
+      font-size: 2rem;
+    }
+
+    .custom-hero-banner__text {
+      font-size: 1rem;
+    }
+
+    .custom-hero-banner__button {
+      padding: 12px 30px;
+      font-size: 0.8125rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Custom Hero Banner",
+  "tag": "section",
+  "class": "section-custom-hero-banner",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Media Settings"
+    },
+    {
+      "type": "select",
+      "id": "media_type",
+      "label": "Media Type",
+      "options": [
+        {
+          "value": "image",
+          "label": "Image"
+        },
+        {
+          "value": "video",
+          "label": "Video (YouTube/Vimeo)"
+        }
+      ],
+      "default": "image"
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero Image",
+      "info": "Recommended size: 1920x800px"
+    },
+    {
+      "type": "url",
+      "id": "video_url",
+      "label": "Video URL",
+      "info": "YouTube or Vimeo URL (e.g., https://www.youtube.com/watch?v=VIDEO_ID)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_overlay",
+      "label": "Show Dark Overlay",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "label": "Overlay Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 40
+    },
+    {
+      "type": "header",
+      "content": "Layout Settings"
+    },
+    {
+      "type": "range",
+      "id": "section_height",
+      "label": "Section Height",
+      "min": 30,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "default": 70
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content Alignment",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "header",
+      "content": "Content Box Settings"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_content_box",
+      "label": "Show Content Box",
+      "default": true,
+      "info": "Display a background box behind the content"
+    },
+    {
+      "type": "color",
+      "id": "content_box_color",
+      "label": "Content Box Color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "content_box_opacity",
+      "label": "Content Box Opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 80
+    },
+    {
+      "type": "header",
+      "content": "Text Style Settings"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "checkbox",
+      "id": "text_drop_shadow",
+      "label": "Add Text Drop Shadow",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Button Layout"
+    },
+    {
+      "type": "select",
+      "id": "button_layout",
+      "label": "Button Layout",
+      "options": [
+        {
+          "value": "horizontal",
+          "label": "Side by Side"
+        },
+        {
+          "value": "vertical",
+          "label": "Stacked"
+        }
+      ],
+      "default": "horizontal",
+      "info": "Choose how buttons are displayed"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "hero_heading",
+      "name": "Heading",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading Text",
+          "default": "FALL / WINTER 2021"
+        }
+      ]
+    },
+    {
+      "type": "hero_text",
+      "name": "Text",
+      "limit": 3,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text Content",
+          "default": "<p>Discover our latest collection</p>"
+        }
+      ]
+    },
+    {
+      "type": "cta_button",
+      "name": "Button",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button Label",
+          "default": "Shop Now"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button Link"
+        },
+        {
+          "type": "color",
+          "id": "button_text_color",
+          "label": "Button Text Color",
+          "default": "#FFFFFF"
+        },
+        {
+          "type": "color",
+          "id": "button_border_color",
+          "label": "Button Border Color",
+          "default": "#FFFFFF"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom Hero Banner",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "hero_heading",
+          "settings": {
+            "heading": "FALL / WINTER 2021"
+          }
+        },
+        {
+          "type": "hero_text",
+          "settings": {
+            "text": "<p>Discover our latest collection</p>"
+          }
+        },
+        {
+          "type": "cta_button",
+          "settings": {
+            "button_label": "SHOP MEN",
+            "button_text_color": "#FFFFFF",
+            "button_border_color": "#FFFFFF"
+          }
+        },
+        {
+          "type": "cta_button",
+          "settings": {
+            "button_label": "SHOP WOMEN",
+            "button_text_color": "#FFFFFF",
+            "button_border_color": "#FFFFFF"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
+
+
