@@ -268,6 +268,19 @@
                 "padding-inline-end": 0
               },
               "blocks": {}
+            },
+            "care_guide_display": {
+              "type": "care-guide",
+              "name": "Care Guide",
+              "settings": {
+                "heading": "Care Instructions",
+                "washing_label": "Washing:",
+                "drying_label": "Drying:",
+                "ironing_label": "Ironing:",
+                "special_label": "Special Care:",
+                "padding_top": 20,
+                "padding_bottom": 20
+              }
             }
           },
           "block_order": [
@@ -276,7 +289,8 @@
             "variant_picker_R3rGDr",
             "buy_buttons_eYQEYi",
             "text_aEtTtq",
-            "material_display"
+            "material_display",
+            "care_guide_display"
           ]
         }
       },

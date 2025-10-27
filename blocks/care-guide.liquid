@@ -1,0 +1,182 @@
+{% liquid
+  # Get the care guide metaobject from the product
+  assign care_guide = closest.product.metafields.custom.care_guide.value
+  
+  # Check if care guide exists
+  assign has_care_guide = false
+  if care_guide != blank
+    assign has_care_guide = true
+  endif
+%}
+
+{%- if has_care_guide -%}
+  <div class="care-guide" {{ block.shopify_attributes }}>
+    <h3 class="care-guide__title">
+      {{ block.settings.heading | default: 'Care Instructions' }}
+    </h3>
+    
+    <div class="care-guide__content">
+      {%- if care_guide.washing_instructions != blank -%}
+        <div class="care-guide__item">
+          <strong class="care-guide__label">
+            {{ block.settings.washing_label | default: 'Washing:' }}
+          </strong>
+          <p class="care-guide__text">{{ care_guide.washing_instructions }}</p>
+        </div>
+      {%- endif -%}
+      
+      {%- if care_guide.drying_instructions != blank -%}
+        <div class="care-guide__item">
+          <strong class="care-guide__label">
+            {{ block.settings.drying_label | default: 'Drying:' }}
+          </strong>
+          <p class="care-guide__text">{{ care_guide.drying_instructions }}</p>
+        </div>
+      {%- endif -%}
+      
+      {%- if care_guide.ironing_instructions != blank -%}
+        <div class="care-guide__item">
+          <strong class="care-guide__label">
+            {{ block.settings.ironing_label | default: 'Ironing:' }}
+          </strong>
+          <p class="care-guide__text">{{ care_guide.ironing_instructions }}</p>
+        </div>
+      {%- endif -%}
+      
+      {%- if care_guide.special_care != blank -%}
+        <div class="care-guide__item">
+          <strong class="care-guide__label">
+            {{ block.settings.special_label | default: 'Special Care:' }}
+          </strong>
+          <p class="care-guide__text">{{ care_guide.special_care }}</p>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Care Guide",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "This block displays the care guide metaobject associated with the product. Make sure to create a 'care_guide' metafield on products that references the CareGuide metaobject."
+    },
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Care Instructions"
+    },
+    {
+      "type": "header",
+      "content": "Labels"
+    },
+    {
+      "type": "text",
+      "id": "washing_label",
+      "label": "Washing Label",
+      "default": "Washing:"
+    },
+    {
+      "type": "text",
+      "id": "drying_label",
+      "label": "Drying Label",
+      "default": "Drying:"
+    },
+    {
+      "type": "text",
+      "id": "ironing_label",
+      "label": "Ironing Label",
+      "default": "Ironing:"
+    },
+    {
+      "type": "text",
+      "id": "special_label",
+      "label": "Special Care Label",
+      "default": "Special Care:"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "unit": "px",
+      "default": 20
+    }
+  ]
+}
+{% endschema %}
+
+{% stylesheet %}
+  .care-guide {
+    padding: var(--care-guide-padding-top, 20px) 0 var(--care-guide-padding-bottom, 20px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .care-guide__title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+    color: var(--color-foreground, #000);
+  }
+
+  .care-guide__content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .care-guide__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .care-guide__label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--color-foreground, #000);
+  }
+
+  .care-guide__text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+    color: var(--color-foreground, #000);
+    opacity: 0.85;
+  }
+
+  @media screen and (max-width: 749px) {
+    .care-guide__title {
+      font-size: 1.125rem;
+    }
+
+    .care-guide__label,
+    .care-guide__text {
+      font-size: 0.875rem;
+    }
+  }
+{% endstylesheet %}
+
